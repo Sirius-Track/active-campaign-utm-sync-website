@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top" />
+    <style>
+      body {
+        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+        font-size: 14px;
+        color: #333;
+      }
+
+      h2,
+      h3 {
+        margin-bottom: 24px;
+        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 4px;
+        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      }
+
+      input,
+      select,
+      button {
+        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+        display: block;
+        margin-bottom: 16px;
+        font-size: 14px;
+        font-family: inherit;
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box;
+        width: 100%;
+      }
+
+      button {
+        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+        background-color: #007aff;
+        color: white;
+        cursor: pointer;
+        border-color: #007aff;
+      }
+
+      button:hover {
+        background-color: #005ad7;
+        border-color: #005ad7;
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      .error {
+        color: red;
+        font-size: 12px;
+        margin-bottom: 16px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <form id="form">
+      <div id="step1">
+        <h2>Credencias de acesso api:</h2>
+
+        <label for="url">URL ActiveCampaign1:</label>
+
+        <input
+          type="text"
+          id="url"
+          name="url"
+          value="https://resilienciahumana.api-us1.com"
+        />
+
+        <p class="error hidden" id="urlError">URL inválida</p>
+
+        <label for="apiToken">API Token:</label>
+
+        <input
+          type="text"
+          id="apiToken"
+          name="apiToken"
+          value="c66e7f364e1bf24c07383bba555f6820a4e8b30f14704e8ee4a9885ba4fa9b136839c032"
+        />
+
+        <p class="error hidden" id="tokenError">Token inválido</p>
+
+        <button id="testConnectionButton" type="button">Testar Conexão</button>
+      </div>
+
+      <div id="step2" class="hidden">
+        <p
+          id="successMessage"
+          class="hidden"
+          style="color: green; font-weight: bold"
+        >
+          <span>&#10003;</span> ActiveCampaign autenticado com sucesso!
+        </p>
+
+        <h3>Mapeamento de campos:</h3>
+
+        <p>Selecione os equivalentes aos titulos:</p>
+
+        <label for="leadList">Lista de leads:</label>
+
+        <select id="leadList" name="leadList">
+          <!-- Opções da lista de leads devem ser preenchidas dinamicamente -->
+        </select>
+
+        <label for="emailColumn">Coluna de e-mail:</label>
+
+        <select id="emailColumn" name="emailColumn">
+          <!-- Opções das colunas da tabela devem ser preenchidas dinamicamente -->
+        </select>
+        <!-- Mapeamento das colunas do add-on com os campos personalizados do ActiveCampaign -->
+        <div id="columnMapping">
+          <div class="mapping">
+            <label for="utm_campaign">utm_campaign:</label>
+            <select id="utm_campaign" name="utm_campaign">
+              <!-- Opções dos campos personalizados do ActiveCampaign devem ser preenchidas dinamicamente -->
+            </select>
+          </div>
+          <div class="mapping">
+            <label for="utm_source">utm_source:</label>
+            <select id="utm_source" name="utm_source">
+              <!-- Opções dos campos personalizados do ActiveCampaign devem ser preenchidas dinamicamente -->
+            </select>
+          </div>
+          <div class="mapping">
+            <label for="utm_medium">utm_medium:</label>
+            <select id="utm_medium" name="utm_medium">
+              <!-- Opções dos campos personalizados do ActiveCampaign devem ser preenchidas dinamicamente -->
+            </select>
+          </div>
+          <div class="mapping">
+            <label for="utm_content">utm_content:</label>
+            <select id="utm_content" name="utm_content">
+              <!-- Opções dos campos personalizados do ActiveCampaign devem ser preenchidas dinamicamente -->
+            </select>
+          </div>
+          <div class="mapping">
+            <label for="utm_term">utm_term:</label>
+            <select id="utm_term" name="utm_term">
+              <!-- Opções dos campos personalizados do ActiveCampaign devem ser preenchidas dinamicamente -->
+            </select>
+          </div>
+          <div class="mapping">
+            <label for="data_inscricao">data_inscricao:</label>
+            <select id="data_inscricao" name="data_inscricao">
+              <!-- Opções dos campos personalizados do ActiveCampaign devem ser preenchidas dinamicamente -->
+            </select>
+          </div>
+        </div>
+
+        <button id="finalize">Finalizar</button>
+      </div>
+    </form>
+
+    <script>
+      document
+        .getElementById("testConnectionButton")
+        .addEventListener("click", () => {
+          const url = document.getElementById("url").value;
+          const apiToken = document.getElementById("apiToken").value;
+
+          google.script.run
+            .withSuccessHandler(handleTestConnection)
+            .withFailureHandler(handleTestConnectionError)
+            .testConnection(url, apiToken);
+        });
+
+      document.getElementById("finalize").addEventListener("click", () => {
+        const formData = collectAndSaveFormData();
+        google.script.run
+          .withSuccessHandler(handleFormSubmit)
+          .finalizeMapping(formData);
+      });
+
+      function handleTestConnection(result) {
+        onConnectionSuccess();
+      }
+
+      function handleTestConnectionError(error) {
+        console.log(`Erro ao testar a conexão: ${error}`);
+        onConnectionError();
+      }
+
+      function onConnectionSuccess() {
+        const step1 = document.getElementById("step1");
+        const step2 = document.getElementById("step2");
+        step1.classList.add("hidden");
+        step2.classList.remove("hidden");
+
+        showSuccessMessage();
+
+        const url = document.getElementById("url").value;
+        const apiToken = document.getElementById("apiToken").value;
+
+        google.script.run
+          .withSuccessHandler(initialize)
+          .withFailureHandler((error) => {
+            console.error("Erro ao inicializar listas:", error);
+          })
+          .fetchData(url, apiToken);
+
+        google.script.run
+          .withSuccessHandler(initializeLists)
+          .withFailureHandler((error) => {
+            console.error("Erro ao inicializar listas:", error);
+          })
+          .getLists(url, apiToken);
+
+        google.script.run
+          .withSuccessHandler(initializeCustomFields)
+          .withFailureHandler((error) => {
+            console.error("Erro ao inicializar listas:", error);
+          })
+          .getCustomFields(url, apiToken);
+      }
+
+      function onConnectionError() {
+        const tokenError = document.getElementById("tokenError");
+        tokenError.textContent =
+          "Erro na conexão. Verifique sua URL e Token da API";
+        tokenError.classList.remove("hidden");
+      }
+
+      function showSuccessMessage() {
+        const successMessage = document.getElementById("successMessage");
+        successMessage.classList.remove("hidden");
+
+        setTimeout(function () {
+          successMessage.classList.add("hidden");
+        }, 6000);
+      }
+
+      function initialize({ customFields, headers }) {
+        console.log("Inicializando com os dados:", { customFields, headers });
+        populateSelectOptions(customFields, headers);
+      }
+
+      function initializeCustomFields(fieldsData) {
+        if (!fieldsData) {
+          console.error(
+            "Erro ao inicializar os campos personalizados. Nenhum dado recebido."
+          );
+          return;
+        }
+
+        fieldsData.forEach(({ title, id }) => {
+          if (title.startsWith("utm_")) {
+            const dropdownId = title;
+            const dropdown = document.getElementById(dropdownId);
+            if (dropdown) {
+              const option = document.createElement("option");
+              option.text = title;
+              option.value = id;
+              dropdown.add(option);
+            }
+          }
+        });
+      }
+
+      function initializeLists(data) {
+        console.log("Inicializando listas com os dados:", data);
+
+        if (!data) {
+          console.error("Erro ao inicializar as listas. Nenhum dado recebido.");
+          return;
+        }
+
+        const leadListDropdown = document.getElementById("leadList");
+
+        leadListDropdown.innerHTML = "";
+
+        data.forEach(({ name, id }) => {
+          const option = document.createElement("option");
+          option.text = name;
+          option.value = id;
+
+          leadListDropdown.add(option);
+        });
+      }
+
+      function populateSelectOptions(customFields = [], headers = []) {
+        const selectElements = document.querySelectorAll(
+          'select[name^="utm_"]'
+        );
+
+        selectElements.forEach((select) => {
+          customFields.forEach(({ fieldLabel, id }) => {
+            const option = document.createElement("option");
+
+            option.value = id;
+
+            option.textContent = fieldLabel;
+
+            select.appendChild(option);
+          });
+        });
+
+        const emailColumnSelect = document.getElementById("emailColumn");
+
+        headers.forEach((header, index) => {
+          const option = document.createElement("option");
+
+          option.value = index + 1;
+
+          option.textContent = header;
+
+          emailColumnSelect.appendChild(option);
+        });
+      }
+
+      function collectAndSaveFormData() {
+        const url = document.getElementById("url").value;
+        const apiToken = document.getElementById("apiToken").value;
+
+        const formData = {
+          url,
+          apiToken,
+          leadList: document.getElementById("leadList").value,
+          emailColumn: document.getElementById("emailColumn").value,
+        };
+
+        const selectElements = document.querySelectorAll(
+          'select[name^="utm_"]'
+        );
+
+        selectElements.forEach((select) => {
+          formData[select.name] = select.value;
+        });
+
+        return formData;
+      }
+
+      function handleFormSubmit() {
+        google.script.host.close();
+      }
+    </script>
+  </body>
+</html>
