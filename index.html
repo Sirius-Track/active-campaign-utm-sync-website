@@ -160,76 +160,54 @@
     </form>
 
     <script>
-      document
-        .getElementById("testConnectionButton")
-        .addEventListener("click", () => {
-          const url = document.getElementById("url").value;
-          const apiToken = document.getElementById("apiToken").value;
+      const testConnectionButton = document.getElementById(
+        "testConnectionButton"
+      );
+      const urlInput = document.getElementById("url");
+      const apiTokenInput = document.getElementById("apiToken");
+      const finalizeButton = document.getElementById("finalize");
+      const step1 = document.getElementById("step1");
+      const step2 = document.getElementById("step2");
+      const tokenError = document.getElementById("tokenError");
+      const successMessage = document.getElementById("successMessage");
+      const emailColumnSelect = document.getElementById("emailColumn");
+      const leadListDropdown = document.getElementById("leadList");
 
-          google.script.run
-            .withSuccessHandler(handleTestConnection)
-            .withFailureHandler(handleTestConnectionError)
-            .testConnection(url, apiToken);
-        });
+      testConnectionButton.addEventListener("click", () => {
+        const url = urlInput.value;
+        const apiToken = apiTokenInput.value;
 
-      document.getElementById("finalize").addEventListener("click", () => {
+        google.script.run
+          .withSuccessHandler(onConnectionSuccess)
+          .withFailureHandler(onConnectionError)
+          .testConnection(url, apiToken);
+      });
+
+      finalizeButton.addEventListener("click", () => {
         const formData = collectAndSaveFormData();
         google.script.run
           .withSuccessHandler(handleFormSubmit)
           .finalizeMapping(formData);
       });
 
-      function handleTestConnection(result) {
-        onConnectionSuccess();
-      }
-
-      function handleTestConnectionError(error) {
-        console.log(`Erro ao testar a conexão: ${error}`);
-        onConnectionError();
-      }
-
       function onConnectionSuccess() {
-        const step1 = document.getElementById("step1");
-        const step2 = document.getElementById("step2");
         step1.classList.add("hidden");
         step2.classList.remove("hidden");
 
         showSuccessMessage();
 
-        const url = document.getElementById("url").value;
-        const apiToken = document.getElementById("apiToken").value;
+        const url = urlInput.value;
+        const apiToken = apiTokenInput.value;
 
         google.script.run
-          .withSuccessHandler(initialize)
+          .withSuccessHandler(populateSelectOptions)
           .withFailureHandler((error) => {
             console.error("Erro ao inicializar listas:", error);
           })
           .fetchData(url, apiToken);
-
-        google.script.run
-          .withSuccessHandler(initializeLists)
-          .withFailureHandler((error) => {
-            console.error("Erro ao inicializar listas:", error);
-          })
-          .getLists(url, apiToken);
-
-        google.script.run
-          .withSuccessHandler(initializeCustomFields)
-          .withFailureHandler((error) => {
-            console.error("Erro ao inicializar listas:", error);
-          })
-          .getCustomFields(url, apiToken);
-      }
-
-      function onConnectionError() {
-        const tokenError = document.getElementById("tokenError");
-        tokenError.textContent =
-          "Erro na conexão. Verifique sua URL e Token da API";
-        tokenError.classList.remove("hidden");
       }
 
       function showSuccessMessage() {
-        const successMessage = document.getElementById("successMessage");
         successMessage.classList.remove("hidden");
 
         setTimeout(function () {
@@ -237,46 +215,40 @@
         }, 6000);
       }
 
-      function initialize({ customFields, headers }) {
-        console.log("Inicializando com os dados:", { customFields, headers });
-        populateSelectOptions(customFields, headers);
-      }
+      function populateSelectOptions({
+        customFields = [],
+        headers = [],
+        lists = [],
+      }) {
+        const selectElements = [
+          ...document.querySelectorAll('select[name^="utm_"]'),
+          ...document.querySelectorAll('select[name="data_inscricao"]'),
+        ];
 
-      function initializeCustomFields(fieldsData) {
-        if (!fieldsData) {
-          console.error(
-            "Erro ao inicializar os campos personalizados. Nenhum dado recebido."
-          );
-          return;
-        }
+        selectElements.forEach((select) => {
+          customFields.forEach(({ title, id }) => {
+            const option = document.createElement("option");
 
-        fieldsData.forEach(({ title, id }) => {
-          if (title.startsWith("utm_")) {
-            const dropdownId = title;
-            const dropdown = document.getElementById(dropdownId);
-            if (dropdown) {
-              const option = document.createElement("option");
-              option.text = title;
-              option.value = id;
-              dropdown.add(option);
-            }
-          }
+            option.value = id;
+            option.text = title;
+            option.selected = title === select.name;
+
+            select.appendChild(option);
+          });
         });
-      }
 
-      function initializeLists(data) {
-        console.log("Inicializando listas com os dados:", data);
+        headers.forEach((header, index) => {
+          const option = document.createElement("option");
 
-        if (!data) {
-          console.error("Erro ao inicializar as listas. Nenhum dado recebido.");
-          return;
-        }
+          option.value = index + 1;
+          option.text = header;
 
-        const leadListDropdown = document.getElementById("leadList");
+          emailColumnSelect.appendChild(option);
+        });
 
         leadListDropdown.innerHTML = "";
 
-        data.forEach(({ name, id }) => {
+        lists.forEach(({ name, id }) => {
           const option = document.createElement("option");
           option.text = name;
           option.value = id;
@@ -285,50 +257,28 @@
         });
       }
 
-      function populateSelectOptions(customFields = [], headers = []) {
-        const selectElements = document.querySelectorAll(
-          'select[name^="utm_"]'
-        );
-
-        selectElements.forEach((select) => {
-          customFields.forEach(({ fieldLabel, id }) => {
-            const option = document.createElement("option");
-
-            option.value = id;
-
-            option.textContent = fieldLabel;
-
-            select.appendChild(option);
-          });
-        });
-
-        const emailColumnSelect = document.getElementById("emailColumn");
-
-        headers.forEach((header, index) => {
-          const option = document.createElement("option");
-
-          option.value = index + 1;
-
-          option.textContent = header;
-
-          emailColumnSelect.appendChild(option);
-        });
+      function onConnectionError(error) {
+        console.log(`Erro ao testar a conexão: ${error}`);
+        tokenError.textContent =
+          "Erro na conexão. Verifique sua URL e Token da API";
+        tokenError.classList.remove("hidden");
       }
 
       function collectAndSaveFormData() {
-        const url = document.getElementById("url").value;
-        const apiToken = document.getElementById("apiToken").value;
+        const url = urlInput.value;
+        const apiToken = apiTokenInput.value;
 
         const formData = {
           url,
           apiToken,
-          leadList: document.getElementById("leadList").value,
-          emailColumn: document.getElementById("emailColumn").value,
+          leadList: leadListDropdown.value,
+          emailColumn: emailColumnSelect.value,
         };
 
-        const selectElements = document.querySelectorAll(
-          'select[name^="utm_"]'
-        );
+        const selectElements = [
+          ...document.querySelectorAll('select[name^="utm_"]'),
+          ...document.querySelectorAll('select[name="data_inscricao"]'),
+        ];
 
         selectElements.forEach((select) => {
           formData[select.name] = select.value;

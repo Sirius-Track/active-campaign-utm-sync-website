@@ -184,12 +184,12 @@ async function getCustomFields(apiUrl, apiToken) {
     console.log("url:", apiUrl + "/api/3/accountCustomFieldMeta?limit=100");
 
     var response = await UrlFetchApp.fetch(
-      apiUrl + "/api/3/accountCustomFieldMeta?limit=100",
+      apiUrl + "/api/3/fields?limit=100",
       options
     );
     var fieldsData = JSON.parse(response.getContentText());
     console.log("Dados retornados em getCustomFields:", fieldsData);
-    return fieldsData.fields || fieldsData.accountCustomFieldMeta;
+    return fieldsData.fields;
   } catch (error) {
     console.log("Erro ao buscar os campos personalizados:", error);
     return [];
@@ -231,6 +231,7 @@ function createUtmsColumns() {
     "utm_medium",
     "utm_content",
     "utm_term",
+    "Data_Cadastro",
   ];
 
   headers.forEach(function (header) {
@@ -258,6 +259,7 @@ function finalizeMapping(formData) {
   scriptProperties.setProperty("apiToken", formData.apiToken);
   scriptProperties.setProperty("leadList", formData.leadList);
   scriptProperties.setProperty("emailColumn", formData.emailColumn);
+  scriptProperties.setProperty("data_inscricao", formData.data_inscricao);
 
   var utmFields = [
     "utm_campaign",
@@ -279,4 +281,9 @@ function finalizeMapping(formData) {
     .setWidth(300)
     .setHeight(100);
   SpreadsheetApp.getUi().showModalDialog(htmlOutput, "Concluído");
+}
+
+function getProperties() {
+  var scriptProperties = PropertiesService.getScriptProperties();
+  console.log(scriptProperties.getProperties());
 }
