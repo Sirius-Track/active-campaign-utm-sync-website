@@ -137,10 +137,6 @@ async function fetchData(url, apiToken) {
   };
 }
 
-function onFormSubmit() {
-  // Função para ser chamada quando o formulário for enviado
-}
-
 function getSheetHeaders() {
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
   return sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
@@ -255,33 +251,31 @@ function getProperties() {
   console.log(scriptProperties.getProperties());
 }
 
-function onEdit(e) {
-  if (e.changeType === "INSERT_ROW") {
-    var headers = getSheetHeaders();
+function onFormSubmit() {  
+  var headers = getSheetHeaders();
 
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var sheet = ss.getActiveSheet();
-    var scriptProperties = PropertiesService.getScriptProperties();
-    var emailColumn = scriptProperties.getProperty("emailColumn");
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getActiveSheet();
+  var scriptProperties = PropertiesService.getScriptProperties();
+  var emailColumn = scriptProperties.getProperty("emailColumn");
 
-    var lastRow = sheet.getLastRow();
-    var rows = sheet.getDataRange().getValues();
-    var email = rows[rows.length - 1][emailColumn];
+  var lastRow = sheet.getLastRow();
+  var rows = sheet.getDataRange().getValues();
+  var email = rows[rows.length - 1][emailColumn];
 
-    var apiUrl = scriptProperties.getProperty("url");
-    var apiToken = scriptProperties.getProperty("apiToken");
+  var apiUrl = scriptProperties.getProperty("url");
+  var apiToken = scriptProperties.getProperty("apiToken");
 
-    var contactId = getContactId(apiUrl, apiToken, email);
-    if (!contactId) return;
-    var customFields = getCustomFieldValues(apiUrl, apiToken, contactId);
-    var customColumnFieldValues = getSheetColumnValues(customFields);
+  var contactId = getContactId(apiUrl, apiToken, email);
+  if (!contactId) return;
+  var customFields = getCustomFieldValues(apiUrl, apiToken, contactId);
+  var customColumnFieldValues = getSheetColumnValues(customFields);
 
-    customColumnFieldValues.forEach(function (customColumnFieldValue) {
-      var columnIndex = headers.indexOf(customColumnFieldValue.fieldName);
-      var columnValue = customColumnFieldValue.fieldValue;
+  customColumnFieldValues.forEach(function (customColumnFieldValue) {
+    var columnIndex = headers.indexOf(customColumnFieldValue.fieldName);
+    var columnValue = customColumnFieldValue.fieldValue;
 
-      if (columnIndex > -1)
-        sheet.getRange(lastRow, columnIndex + 1).setValue(columnValue);
-    });
-  }
+    if (columnIndex > -1)
+      sheet.getRange(lastRow, columnIndex + 1).setValue(columnValue);
+  });
 }
