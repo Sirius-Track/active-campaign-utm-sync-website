@@ -148,8 +148,8 @@
             </select>
           </div>
           <div class="mapping">
-            <label for="data_inscricao">data_inscricao:</label>
-            <select id="data_inscricao" name="data_inscricao">
+            <label for="data_criacao">data_criacao:</label>
+            <select id="data_criacao" name="data_criacao">
               <!-- Opções dos campos personalizados do ActiveCampaign devem ser preenchidas dinamicamente -->
             </select>
           </div>
@@ -222,7 +222,7 @@
       }) {
         const selectElements = [
           ...document.querySelectorAll('select[name^="utm_"]'),
-          ...document.querySelectorAll('select[name="data_inscricao"]'),
+          ...document.querySelectorAll('select[name="data_criacao"]'),
         ];
 
         selectElements.forEach((select) => {
@@ -240,7 +240,7 @@
         headers.forEach((header, index) => {
           const option = document.createElement("option");
 
-          option.value = index + 1;
+          option.value = index;
           option.text = header;
 
           emailColumnSelect.appendChild(option);
@@ -277,7 +277,7 @@
 
         const selectElements = [
           ...document.querySelectorAll('select[name^="utm_"]'),
-          ...document.querySelectorAll('select[name="data_inscricao"]'),
+          ...document.querySelectorAll('select[name="data_criacao"]'),
         ];
 
         selectElements.forEach((select) => {
