@@ -96,13 +96,6 @@ function getActiveCampaignData() {
   }
 }
 
-function onOpen() {
-  var ui = SpreadsheetApp.getUi();
-  ui.createMenu("ActiveCampaign Sync")
-    .addItem("Configurar", "showModal")
-    .addToUi();
-}
-
 function showModal() {
   var htmlOutput = HtmlService.createHtmlOutputFromFile("modal.html")
     .setWidth(400)
@@ -187,6 +180,13 @@ function getLists(apiUrl, apiToken) {
   }
 }
 
+function setTab() {
+  var ui = SpreadsheetApp.getUi();
+  ui.createMenu("ActiveCampaign Sync")
+    .addItem("Configurar", "showModal")
+    .addToUi();
+}
+
 function createCustomColumns() {
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
   var headers = [
@@ -199,13 +199,14 @@ function createCustomColumns() {
   ];
 
   headers.forEach(function (header) {
-    sheet.getRange(1, sheet.getLastColumn() + 1).setValue(header);
+    var col = sheet.getRange(1, sheet.getLastColumn() + 1);
+    if (!col.getDisplayValue()) col.setValue(header);
   });
 }
 
-function onInstall() {
+function onOpen() {
   createCustomColumns();
-  onOpen();
+  setTab();
 }
 
 function setTrigger() {
