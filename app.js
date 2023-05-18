@@ -237,6 +237,7 @@ function finalizeMapping(formData) {
   });
 
   setTrigger();
+  getActiveCampaignData();
 
   var htmlOutput = HtmlService.createHtmlOutput(
     "<p>Configuração concluída com sucesso.</p>"
@@ -251,7 +252,7 @@ function getProperties() {
   console.log(scriptProperties.getProperties());
 }
 
-function onFormSubmit() {  
+function onFormSubmit() {
   var headers = getSheetHeaders();
 
   var ss = SpreadsheetApp.getActiveSpreadsheet();
