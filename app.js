@@ -198,10 +198,14 @@ function createCustomColumns() {
     "data_criacao",
   ];
 
-  headers.forEach(function (header) {
-    var col = sheet.getRange(1, sheet.getLastColumn() + 1);
-    if (!col.getDisplayValue()) col.setValue(header);
-  });
+  var headersInSheet = getSheetHeaders();
+
+  headers
+    .filter((h) => !headersInSheet.includes(h))
+    .forEach((header) => {
+      var col = sheet.getRange(1, sheet.getLastColumn() + 1);
+      col.setValue(header);
+    });
 }
 
 function onOpen() {
@@ -237,6 +241,7 @@ function finalizeMapping(formData) {
     scriptProperties.setProperty(utmField, formData[utmField]);
   });
 
+  createCustomColumns();
   setTrigger();
   getActiveCampaignData();
 
