@@ -235,6 +235,12 @@
             option.text = title;
             option.selected = title === select.name;
 
+            if (
+              select.name === "data_criacao" &&
+              title.toLowerCase().includes("data")
+            )
+              option.selected = true;
+
             select.appendChild(option);
           });
         });
@@ -244,6 +250,7 @@
 
           option.value = index;
           option.text = header;
+          option.selected = header.includes("mail");
 
           emailColumnSelect.appendChild(option);
         });
