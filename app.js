@@ -182,7 +182,7 @@ function getLists(apiUrl, apiToken) {
 
 function setTab() {
   var ui = SpreadsheetApp.getUi();
-  ui.createMenu("ActiveCampaign Sync")
+  ui.createMenu("ActiveCampaign UTM Sync")
     .addItem("Configurar", "showModal")
     .addToUi();
 }
